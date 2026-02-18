@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mcp-fitbit
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node build/index-http.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FITBIT_CLIENT_ID
+        sync: false
+      - key: FITBIT_CLIENT_SECRET
+        sync: false
+      # BASE_URL is auto-set from RENDER_EXTERNAL_URL on Render

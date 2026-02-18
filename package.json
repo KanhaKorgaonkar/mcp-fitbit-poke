@@ -20,6 +20,7 @@
     "test:coverage": "vitest run --coverage",
     "build": "tsc",
     "start": "node build/index.js",
+    "start:http": "node build/index-http.js",
     "dev": "npm run build && npx @modelcontextprotocol/inspector node build/index.js",
     "lint": "eslint src/**/*.ts --ignore-pattern src/**/*.test.ts",
     "lint:fix": "eslint src/**/*.ts --fix",

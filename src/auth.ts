@@ -102,6 +102,17 @@ async function saveTokenToFile(tokenData: FitbitTokenData): Promise<void> {
 }
 
 /**
+ * Saves token from OAuth callback (for hosted/HTTP deployment).
+ * Exported for use by auth-hosted.ts when handling /callback.
+ */
+export async function saveTokenFromOAuth(token: Token): Promise<void> {
+  const data = token as FitbitTokenData;
+  accessToken = data.access_token;
+  tokenData = data;
+  await saveTokenToFile(data);
+}
+
+/**
  * Loads the token data from file
  * @returns The token data or null if not found
  */
