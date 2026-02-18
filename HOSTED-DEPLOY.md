@@ -12,54 +12,62 @@ This guide covers deploying the Fitbit MCP server so you can connect it to [Poke
 
 2. **GitHub account** (for deployment)
 
-## Deploy to Railway (Recommended)
+## Deploy to Render (Recommended)
 
-Railway keeps your app running 24/7 — no spin-down like Render's free tier.
+1. **Go to [Render](https://render.com)** and sign in with GitHub
 
-1. **Go to [Railway](https://railway.app)** and sign in with GitHub
+2. **New → Web Service** and connect your repo (`KanhaKorgaonkar/mcp-fitbit-poke`)
 
-2. **New Project** → **Deploy from GitHub repo** → select your repo
+3. **Configure:**
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `node build/index-http.js`
+   - **Plan:** Free (or paid for always-on)
 
-3. **Add environment variables** (in the service → Variables tab):
+4. **Add environment variables:**
    - `FITBIT_CLIENT_ID` — your Fitbit Client ID
    - `FITBIT_CLIENT_SECRET` — your Fitbit Client Secret
 
-4. **Generate a domain** — Service → Settings → Networking → **Generate Domain**
-   - You'll get a URL like `https://mcp-fitbit-production-xxxx.up.railway.app`
+5. **Deploy** — Render will build and start your service
 
-5. **Update Fitbit app settings:**
+6. **Get your URL** — e.g. `https://mcp-fitbit-xxxx.onrender.com`
+
+7. **Update Fitbit app settings:**
    - Go to [dev.fitbit.com](https://dev.fitbit.com/) → your app
-   - Add to **Callback URL:** `https://your-railway-domain.up.railway.app/callback`
+   - Add to **Callback URL:** `https://your-app-name.onrender.com/callback`
    - Save
 
-6. **Authorize Fitbit:**
-   - Visit `https://your-railway-domain.up.railway.app/auth`
+8. **Authorize Fitbit:**
+   - Visit `https://your-app-name.onrender.com/auth`
    - Log in to Fitbit and grant permissions
    - You'll see "Authorization successful!"
 
-The `railway.json` in this repo configures the build and start commands automatically.
+**Note:** Render's free tier spins down after ~15 min of inactivity (30–60s cold start when Poke next requests). For always-on, use a paid plan.
+
+The `render.yaml` in this repo can auto-configure the service if Render detects it.
 
 ## Connect to Poke AI
 
 1. Go to [poke.com/settings/connections/integrations/new](https://poke.com/settings/connections/integrations/new)
 
-2. Add your MCP server URL: `https://your-railway-domain.up.railway.app/mcp`
+2. Add your MCP server URL: `https://your-app-name.onrender.com/mcp`
 
 3. **Important:** Use the `/mcp` path — Poke expects that endpoint
 
 4. Test by asking Poke: *"Tell the subagent to use the Fitbit integration's get_profile tool"*
 
-## Deploy to Render (Alternative)
+## Deploy to Railway (Alternative)
 
-Render's free tier spins down after ~15 min of inactivity (30–60s cold start on next request).
+Railway keeps your app running 24/7 with no spin-down. Good if you want instant responses.
 
-1. **Go to [Render](https://render.com)** → New → Web Service → connect your repo
+1. **Go to [Railway](https://railway.app)** → New Project → Deploy from GitHub repo
 
-2. **Configure:** Build Command `npm install && npm run build`, Start Command `node build/index-http.js`
+2. Add `FITBIT_CLIENT_ID` and `FITBIT_CLIENT_SECRET` env vars
 
-3. Add `FITBIT_CLIENT_ID` and `FITBIT_CLIENT_SECRET` env vars
+3. Generate a domain in Settings → Networking
 
-4. Deploy, then add your Render URL + `/callback` to Fitbit, and visit `/auth` to authorize
+4. Add your Railway URL + `/callback` to Fitbit, then visit `/auth` to authorize
+
+The `railway.json` in this repo configures build and start commands automatically.
 
 ## Local Testing
 
@@ -77,8 +85,8 @@ Then visit http://localhost:3000 — you should see the server info. Add `http:/
 
 - Tokens are stored in `.fitbit-token.json` on the server
 - On redeploy, the token may be cleared — visit `/auth` again to re-authorize
+- Render free tier: ephemeral filesystem; token is lost on every deploy
 - Railway: filesystem persists between requests but may reset on redeploy
-- Render: free tier has ephemeral filesystem; token is lost on every deploy
 
 ## Troubleshooting
 
