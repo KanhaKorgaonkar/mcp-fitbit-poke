@@ -124,6 +124,42 @@ function createMcpServer() {
 
 const transports: Record<string, InstanceType<typeof StreamableHTTPServerTransport>> = {};
 
+// API key auth: if MCP_API_KEY or MCP_API_KEYS is set, require it on MCP requests
+function getValidApiKeys(): string[] {
+  const single = process.env.MCP_API_KEY?.trim();
+  const multiple = process.env.MCP_API_KEYS?.split(',').map((k) => k.trim()).filter(Boolean);
+  if (multiple?.length) return multiple;
+  if (single) return [single];
+  return [];
+}
+
+function requireApiKey(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): void {
+  const validKeys = getValidApiKeys();
+  if (validKeys.length === 0) {
+    next();
+    return;
+  }
+
+  const authHeader = req.headers.authorization;
+  const apiKeyHeader = req.headers['x-api-key'] as string | undefined;
+  const provided =
+    (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null) ?? apiKeyHeader?.trim();
+
+  if (!provided || !validKeys.includes(provided)) {
+    res.status(401).json({
+      jsonrpc: '2.0',
+      error: { code: -32001, message: 'Unauthorized: Invalid or missing API key' },
+      id: null,
+    });
+    return;
+  }
+  next();
+}
+
 async function main() {
   await initializeAuth();
 
@@ -141,7 +177,7 @@ async function main() {
   // OAuth routes for Fitbit authorization
   app.use(createOAuthRouter(baseUrl));
 
-  // Health check
+  // Health check (no API key required)
   app.get('/', (_req, res) => {
     res.json({
       name: 'Fitbit MCP Server',
@@ -149,11 +185,12 @@ async function main() {
       mcp: `${baseUrl}/mcp`,
       auth: `${baseUrl}/auth`,
       status: 'running',
+      apiKeyRequired: getValidApiKeys().length > 0,
     });
   });
 
-  // MCP Streamable HTTP endpoint
-  app.post('/mcp', async (req, res) => {
+  // MCP Streamable HTTP endpoint (protected by API key if MCP_API_KEY is set)
+  app.post('/mcp', requireApiKey, async (req, res) => {
     try {
       const sessionId = req.headers['mcp-session-id'] as string | undefined;
       let transport = sessionId ? transports[sessionId] : undefined;
@@ -201,7 +238,7 @@ async function main() {
     }
   });
 
-  app.get('/mcp', async (req, res) => {
+  app.get('/mcp', requireApiKey, async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
     if (!sessionId || !transports[sessionId]) {
       res.status(400).send('Invalid or missing session ID');
@@ -210,7 +247,7 @@ async function main() {
     await transports[sessionId].handleRequest(req, res);
   });
 
-  app.delete('/mcp', async (req, res) => {
+  app.delete('/mcp', requireApiKey, async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
     if (!sessionId || !transports[sessionId]) {
       res.status(400).send('Invalid or missing session ID');
@@ -219,10 +256,16 @@ async function main() {
     await transports[sessionId].handleRequest(req, res);
   });
 
+  const hasApiKey = getValidApiKeys().length > 0;
   app.listen(port, '0.0.0.0', () => {
     console.log(`Fitbit MCP Server running at ${baseUrl}`);
     console.log(`  MCP endpoint: ${baseUrl}/mcp`);
     console.log(`  OAuth: Visit ${baseUrl}/auth to authorize Fitbit`);
+    if (hasApiKey) {
+      console.log(`  API key auth: enabled`);
+    } else if (baseUrl.includes('onrender.com') || baseUrl.includes('railway.app')) {
+      console.warn(`  WARNING: MCP_API_KEY not set. Your health data is publicly accessible. Set MCP_API_KEY in env.`);
+    }
   });
 }
 

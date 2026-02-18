@@ -12,4 +12,6 @@ services:
         sync: false
       - key: FITBIT_CLIENT_SECRET
         sync: false
+      - key: MCP_API_KEY
+        sync: false
       # BASE_URL is auto-set from RENDER_EXTERNAL_URL on Render

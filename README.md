@@ -40,7 +40,7 @@ The original mcp-fitbit runs locally via stdio. This adds:
 2. **Deploy to Render:**
    - Go to [render.com](https://render.com) → New → Web Service → connect this repo
    - Build: `npm install && npm run build`, Start: `node build/index-http.js`
-   - Add env vars: `FITBIT_CLIENT_ID`, `FITBIT_CLIENT_SECRET`
+   - Add env vars: `FITBIT_CLIENT_ID`, `FITBIT_CLIENT_SECRET`, `MCP_API_KEY` (a secret you choose — required to protect your data)
 
 3. **Add callback to Fitbit:** `https://your-app.onrender.com/callback`
 
