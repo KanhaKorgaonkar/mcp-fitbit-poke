@@ -7,6 +7,8 @@ This guide covers deploying the Fitbit MCP server so you can connect it to [Poke
 1. **Fitbit API credentials** from [dev.fitbit.com](https://dev.fitbit.com/)
    - Create an app with **OAuth 2.0 Application Type: Personal**
    - You'll add the callback URL after deployment
+   - **Privacy Policy URL:** `https://github.com/KanhaKorgaonkar/mcp-fitbit-poke/blob/main/PRIVACY.md`
+   - **Terms of Service URL:** `https://github.com/KanhaKorgaonkar/mcp-fitbit-poke/blob/main/TERMS.md`
 
 2. **GitHub account** (for deployment)
 
